@@ -1,0 +1,405 @@
+<!DOCTYPE html>
+<html lang="bn">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>PANUHUB - Video Sharing Platform</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        }
+
+        body {
+            background-color: #0f0f0f;
+            color: #ffffff;
+        }
+
+        /* Navbar Styling */
+        header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 15px 30px;
+            background-color: #181818;
+            position: sticky;
+            top: 0;
+            z-index: 100;
+            border-bottom: 1px solid #2a2a2a;
+        }
+
+        .logo {
+            font-size: 26px;
+            font-weight: 900;
+            letter-spacing: 1px;
+            cursor: pointer;
+        }
+
+        .logo span {
+            background-color: #ff9000;
+            color: #000000;
+            padding: 2px 6px;
+            border-radius: 4px;
+            margin-left: 2px;
+        }
+
+        .search-bar {
+            display: flex;
+            width: 40%;
+        }
+
+        .search-bar input {
+            width: 100%;
+            padding: 10px 15px;
+            border: 1px solid #333;
+            background-color: #121212;
+            color: white;
+            border-radius: 20px 0 0 20px;
+            outline: none;
+        }
+
+        .search-bar button {
+            padding: 10px 20px;
+            border: 1px solid #333;
+            background-color: #222;
+            color: white;
+            border-radius: 0 20px 20px 0;
+            cursor: pointer;
+        }
+
+        .upload-btn {
+            background-color: #ff9000;
+            color: #000;
+            border: none;
+            padding: 10px 18px;
+            font-weight: bold;
+            border-radius: 5px;
+            cursor: pointer;
+            transition: 0.2s;
+        }
+
+        .upload-btn:hover {
+            background-color: #e07e00;
+        }
+
+        /* Main Video Player Section */
+        .player-section {
+            max-width: 1100px;
+            margin: 25px auto;
+            padding: 0 20px;
+            display: none; /* Hidden until a video is clicked */
+        }
+
+        .player-section video {
+            width: 100%;
+            max-height: 550px;
+            background-color: #000;
+            border-radius: 8px;
+        }
+
+        .video-details {
+            margin-top: 15px;
+            padding-bottom: 15px;
+            border-bottom: 1px solid #2a2a2a;
+        }
+
+        .video-details h2 {
+            font-size: 22px;
+            margin-bottom: 8px;
+        }
+
+        .video-details p {
+            color: #aaaaaa;
+            font-size: 14px;
+        }
+
+        /* Video Grid Section */
+        .container {
+            max-width: 1300px;
+            margin: 25px auto;
+            padding: 0 20px;
+        }
+
+        .section-title {
+            margin-bottom: 20px;
+            font-size: 20px;
+            border-left: 4px solid #ff9000;
+            padding-left: 10px;
+        }
+
+        .video-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+            gap: 20px;
+        }
+
+        .video-card {
+            background-color: #181818;
+            border-radius: 8px;
+            overflow: hidden;
+            cursor: pointer;
+            transition: transform 0.2s;
+        }
+
+        .video-card:hover {
+            transform: translateY(-4px);
+        }
+
+        .thumbnail {
+            width: 100%;
+            height: 160px;
+            background-color: #252525;
+            object-fit: cover;
+        }
+
+        .card-info {
+            padding: 12px;
+        }
+
+        .card-title {
+            font-size: 16px;
+            font-weight: 600;
+            margin-bottom: 6px;
+            display: -webkit-box;
+            -webkit-line-clamp: 2;
+            -webkit-box-orient: vertical;
+            overflow: hidden;
+        }
+
+        .card-meta {
+            font-size: 13px;
+            color: #999;
+        }
+
+        /* Upload Modal */
+        .modal {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0, 0, 0, 0.8);
+            justify-content: center;
+            align-items: center;
+            z-index: 200;
+        }
+
+        .modal-content {
+            background-color: #1f1f1f;
+            padding: 25px;
+            border-radius: 8px;
+            width: 90%;
+            max-width: 450px;
+        }
+
+        .modal-content h3 {
+            margin-bottom: 15px;
+        }
+
+        .form-group {
+            margin-bottom: 15px;
+        }
+
+        .form-group label {
+            display: block;
+            margin-bottom: 5px;
+            font-size: 14px;
+            color: #ccc;
+        }
+
+        .form-group input {
+            width: 100%;
+            padding: 10px;
+            background-color: #121212;
+            border: 1px solid #333;
+            color: white;
+            border-radius: 4px;
+        }
+
+        .modal-actions {
+            display: flex;
+            justify-content: flex-end;
+            gap: 10px;
+        }
+
+        .cancel-btn {
+            background-color: #333;
+            color: white;
+            border: none;
+            padding: 10px 15px;
+            border-radius: 4px;
+            cursor: pointer;
+        }
+    </style>
+</head>
+<body>
+
+    <!-- Header -->
+    <header>
+        <div class="logo" onclick="resetHome()">PANU<span>HUB</span></div>
+        <div class="search-bar">
+            <input type="text" id="searchInput" placeholder="ভিডিও খুঁজুন..." onkeyup="filterVideos()">
+            <button onclick="filterVideos()">Search</button>
+        </div>
+        <button class="upload-btn" onclick="openModal()">+ Upload Video</button>
+    </header>
+
+    <!-- Active Video Player -->
+    <section class="player-section" id="playerSection">
+        <video id="mainPlayer" controls></video>
+        <div class="video-details">
+            <h2 id="playerTitle">Video Title</h2>
+            <p id="playerMeta">Uploaded by Channel • 0 views</p>
+        </div>
+    </section>
+
+    <!-- Video Feed -->
+    <main class="container">
+        <h3 class="section-title">Trending Videos</h3>
+        <div class="video-grid" id="videoGrid">
+            <!-- Videos will load here via JavaScript -->
+        </div>
+    </main>
+
+    <!-- Upload Modal -->
+    <div class="modal" id="uploadModal">
+        <div class="modal-content">
+            <h3>নতুন ভিডিও আপলোড করুন</h3>
+            <div class="form-group">
+                <label>ভিডিওর টাইটেল</label>
+                <input type="text" id="videoTitleInput" placeholder="ভিডিওর নাম লিখুন...">
+            </div>
+            <div class="form-group">
+                <label>চ্যানেলের নাম</label>
+                <input type="text" id="channelNameInput" placeholder="আপনার নাম বা চ্যানেল...">
+            </div>
+            <div class="form-group">
+                <label>ভিডিও ফাইল সিলেক্ট করুন (MP4/WebM)</label>
+                <input type="file" id="videoFileInput" accept="video/*">
+            </div>
+            <div class="modal-actions">
+                <button class="cancel-btn" onclick="closeModal()">বাতিল</button>
+                <button class="upload-btn" onclick="publishVideo()">পাবলিশ করুন</button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Sample Initial Videos (Using open-source sample videos)
+        let videos = [
+            {
+                id: 1,
+                title: "Big Buck Bunny - 3D Animated Short Film",
+                channel: "Blender Studio",
+                views: "1.2M views",
+                thumbnail: "https://peach.blender.org/wp-content/uploads/title_anouncement.jpg?x11217",
+                videoUrl: "https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/BigBuckBunny.mp4"
+            },
+            {
+                id: 2,
+                title: "Elephants Dream - Open Movie Project",
+                channel: "Orange Open Movie",
+                views: "850K views",
+                thumbnail: "https://upload.wikimedia.org/wikipedia/commons/thumb/e/e8/Elephants_Dream_s5_both.jpg/640px-Elephants_Dream_s5_both.jpg",
+                videoUrl: "https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/ElephantsDream.mp4"
+            },
+            {
+                id: 3,
+                title: "Sintel - Fantasy Short Film",
+                channel: "Blender Foundation",
+                views: "2.4M views",
+                thumbnail: "https://upload.wikimedia.org/wikipedia/commons/thumb/8/8f/Sintel_poster.jpg/640px-Sintel_poster.jpg",
+                videoUrl: "https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/Sintel.mp4"
+            }
+        ];
+
+        const videoGrid = document.getElementById('videoGrid');
+        const playerSection = document.getElementById('playerSection');
+        const mainPlayer = document.getElementById('mainPlayer');
+        const playerTitle = document.getElementById('playerTitle');
+        const playerMeta = document.getElementById('playerMeta');
+
+        // Render videos to the grid
+        function renderVideos(videoList) {
+            videoGrid.innerHTML = '';
+            videoList.forEach(video => {
+                const card = document.createElement('div');
+                card.className = 'video-card';
+                card.onclick = () => playVideo(video);
+
+                card.innerHTML = `
+                    <img src="${video.thumbnail}" alt="${video.title}" class="thumbnail">
+                    <div class="card-info">
+                        <div class="card-title">${video.title}</div>
+                        <div class="card-meta">${video.channel} • ${video.views}</div>
+                    </div>
+                `;
+                videoGrid.appendChild(card);
+            });
+        }
+
+        // Play selected video
+        function playVideo(video) {
+            playerSection.style.display = 'block';
+            mainPlayer.src = video.videoUrl;
+            playerTitle.innerText = video.title;
+            playerMeta.innerText = `${video.channel} • ${video.views}`;
+            mainPlayer.play();
+            window.scrollTo({ top: 0, behavior: 'smooth' });
+        }
+
+        // Search functionality
+        function filterVideos() {
+            const query = document.getElementById('searchInput').value.toLowerCase();
+            const filtered = videos.filter(v => 
+                v.title.toLowerCase().includes(query) || 
+                v.channel.toLowerCase().includes(query)
+            );
+            renderVideos(filtered);
+        }
+
+        // Reset view
+        function resetHome() {
+            playerSection.style.display = 'none';
+            mainPlayer.pause();
+            document.getElementById('searchInput').value = '';
+            renderVideos(videos);
+        }
+
+        // Modal controls
+        function openModal() {
+            document.getElementById('uploadModal').style.display = 'flex';
+        }
+
+        function closeModal() {
+            document.getElementById('uploadModal').style.display = 'none';
+        }
+
+        // Handle local video upload
+        function publishVideo() {
+            const title = document.getElementById('videoTitleInput').value;
+            const channel = document.getElementById('channelNameInput').value || "Anonymous Creator";
+            const fileInput = document.getElementById('videoFileInput');
+
+            if (!title || fileInput.files.length === 0) {
+                alert("অনুগ্রহ করে ভিডিওর টাইটেল এবং একটি ভিডিও ফাইল দিন!");
+                return;
+            }
+
+            const file = fileInput.files[0];
+            const videoUrl = URL.createObjectURL(file);
+
+            const newVideo = {
+                id: Date.now(),
+                title: title,
+                channel: channel,
+                views: "Just now",
+                thumbnail: "https://via.placeholder.com/400x225/222222/ff9000?text=PANUHUB+Video",
+                videoUrl: videoUrl
+            };
+
+            videos.unshift(newVideo); // Add to the top of the list
+            renderVideos(
